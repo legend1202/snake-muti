@@ -1,0 +1,44 @@
+.tournament-section {
+    padding: 50px;
+}
+
+.tournament-title{
+    text-align: center;
+}
+
+.tournament-title > span{
+    font-size: 30px;
+    color: white;
+    font-weight: bold;
+    line-height: 100px;
+}
+
+
+.tournament-content{
+    display: flex;
+    gap:40px
+}
+
+.tournament-tbl{
+    flex: 2;
+}
+
+.tournament-tbl .ant-table-tbody .ant-table-cell{
+    background-color: #3E454F !important;
+    border-color:  black !important;
+    color: white !important;
+}
+
+.tournament-tbl .ant-table-thead .ant-table-cell{
+    border-color:  black !important;
+}
+
+
+.tournament-detail .ant-card-body{
+    background-color: #3E454F !important;
+    color: white !important; 
+}
+
+.tournament-detail .ant-card-head-title{
+    text-align: center;
+}

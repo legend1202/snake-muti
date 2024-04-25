@@ -1,0 +1,72 @@
+[{
+  "_id": {
+    "$oid": "660ba5e661d95f4c31bce5bd"
+  },
+  "start_date": {
+    "$timestamp": {
+      "t": 1712039444,
+      "i": 1
+    }
+  },
+  "duration_time": "30",
+  "buy_in": "1",
+  "registered_member": "109",
+  "min_player_num": "50",
+  "max_player_num": "2",
+  "prize_pool": "99",
+  "payout_structure": "10%"
+},
+{
+  "_id": {
+    "$oid": "661738860a86c45c0aa6dfb3"
+  },
+  "start_date": {
+    "$timestamp": {
+      "t": 1712039444,
+      "i": 1
+    }
+  },
+  "duration_time": "30",
+  "buy_in": "1",
+  "registered_member": "109",
+  "min_player_num": "50",
+  "max_player_num": "5",
+  "prize_pool": "99",
+  "payout_structure": "10%"
+},
+{
+  "_id": {
+    "$oid": "661738930a86c45c0aa6dfb4"
+  },
+  "start_date": {
+    "$timestamp": {
+      "t": 1712039444,
+      "i": 1
+    }
+  },
+  "duration_time": "30",
+  "buy_in": "1",
+  "registered_member": "109",
+  "min_player_num": "50",
+  "max_player_num": "300",
+  "prize_pool": "99",
+  "payout_structure": "10%"
+},
+{
+  "_id": {
+    "$oid": "661738950a86c45c0aa6dfb5"
+  },
+  "start_date": {
+    "$timestamp": {
+      "t": 1712039444,
+      "i": 1
+    }
+  },
+  "duration_time": "30",
+  "buy_in": "1",
+  "registered_member": "109",
+  "min_player_num": "50",
+  "max_player_num": "300",
+  "prize_pool": "99",
+  "payout_structure": "10%"
+}]
