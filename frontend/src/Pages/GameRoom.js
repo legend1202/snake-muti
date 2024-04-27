@@ -5,68 +5,64 @@ import Phaser from "phaser-ce"
 function GameRoom() {
 
   const location = useLocation();
-  const interval = useRef(setTimeout(() => {}, 0));
+  const interval = useRef(setTimeout(() => { }, 0));
   const { roomId, playerId } = location.state;
-  const [ loading, setLoading ] = useState(true);
+  const [loading, setLoading] = useState(true);
   const timeOut = 3000;
-  let game = null;
+  const game = useRef(null);
 
   const snakeInit = async () => {
+    game.current = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, {
+      roomId: roomId,
+      playerId: playerId
+    });
+    game.current.state.add('Game', Game);
+    game.current.state.start('Game');
 
-    (function() {
-        game = new Phaser.Game(window.innerWidth, window.innerHeight, Phaser.AUTO, {
-            roomId: roomId,
-            playerId: playerId
-        });
-        game.state.add('Game', Game);
-        game.state.start('Game');
-
-    })();
-    
     setLoading(false);
   }
 
   const LoadinDialog = () => {
 
-      const loadingStyles = { 
-          top: "50%",
-          left: "50%",
-          position: "absolute",
-          fontSize: "85px",
-          transform: "translateX(-50%) translateY(-50%)",
-          color: "white"
-      }
+    const loadingStyles = {
+      top: "50%",
+      left: "50%",
+      position: "absolute",
+      fontSize: "85px",
+      transform: "translateX(-50%) translateY(-50%)",
+      color: "white"
+    }
 
-      return (
-          <div style={loadingStyles} >Loading...</div>
-      )
+    return (
+      <div style={loadingStyles} >Loading...</div>
+    )
   }
 
   useLayoutEffect(() => {
 
-        interval.current = setTimeout(snakeInit, timeOut);
-        
-        return () => {
-            clearTimeout(interval.current); // cleanup
-        };
+    interval.current = setTimeout(snakeInit, timeOut);
 
-  },[]);
+    return () => {
+      clearTimeout(interval.current); // cleanup
+    };
+
+  }, []);
 
   useEffect(() => {
     return () => {
-          if(game) {
-              game.destroy();
-          }
-        }
-    }, [])
-
-  return ( 
-    <>
-      { 
-        loading ? <LoadinDialog/>
-                : null
+      if (game.current) {
+        game.current.destroy();
       }
-      <canvas id = "gameCanvas" style={{ position: loading == false ? "fixed" : "relative" }} ></canvas>
+    }
+  }, [])
+
+  return (
+    <>
+      {
+        loading ? <LoadinDialog />
+          : null
+      }
+      <canvas id="gameCanvas" style={{ position: loading == false ? "fixed" : "relative" }} ></canvas>
     </>
   );
 }

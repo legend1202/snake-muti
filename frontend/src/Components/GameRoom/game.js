@@ -74,7 +74,7 @@ export default class Game {
             snake.addDestroyedCallback(this.snakeDestroyed, this);
         }
 
-           // Add food randomly
+        // Add food randomly
         for (var i = 0; i < 100; i++) {
             // console.log("Generate Food Group, X, Y:", Util.randomInt(-width, width), Util.randomInt(-height, height));
             this.initFood(Util.randomInt(-width, width), Util.randomInt(-height, height));
@@ -87,6 +87,7 @@ export default class Game {
         this.socket.on('food group', this._onFoodGroup.bind(this))
 
         this.socket.on('rotate player', this._onRotatePlayer.bind(this))
+        this.socket.on('otherplayer', this._onRotatePlayer.bind(this))
 
         // Socket disconnection
         this.socket.on('disconnect', this._onSocketDisconnect.bind(this))
@@ -132,35 +133,28 @@ export default class Game {
 
         // Send local player data to the game server
         // console.log('_onSocketConnected Connected to socket server')
+        console.log('socket connected')
 
-        this.socket.emit('new player', { 
+        this.socket.emit('new player', {
             spriteKey: 'circle',
             x: this.newSnake.head.x,
             y: this.newSnake.head.y,
             numSnakeSections: this.newSnake.sections.length,
             playerId: this.newSnake.playerId,
             roomId: this.newSnake.roomId,
-         });
+        });
     }
 
     //Player start rotating with the data from server
     _onRotatePlayer(res) {
-        // console.log("Player started moving:", res);
-        
-        // var currentPlayer = this.game.snakes.find(function(player){
-        //     return player.playerId === res.playerId && res.roomId == player.roomId
-        // });
+        console.log("Player started moving:", res);
 
-        // if(!currentPlayer){
-        //     console.log("Player Not Found !!!")
-        //     return;
-        // }
-        
-        // this.game.snakes.forEach((element, i) => {
-        //     if(element.snake){
-        //         element.snake[i].rotatePlayer( res.headX, res.headY );
-        //     }
-        // });
+        for (const player of this.game.snakes) {
+            if (player.playerId === res.playerId && player.roomId === res.roomId && player.snake) {
+                player.snake.rotatePlayer(res.headX, res.headY)
+                break;
+            }
+        }
     }
 
     _onFoodGroup(foodGroup) {
@@ -173,12 +167,12 @@ export default class Game {
 
     _onSocketDisconnect(data) {
         console.log("Someone left room!", data);
-        
+
     }
 
-    handleNewPlayer(data){
+    handleNewPlayer(data) {
         if (data.playerId != this.playerId) {
-            console.log("exits players", this.playerId ,data.playerId);
+            console.log("exits players", this.playerId, data.playerId);
 
             new OtherPlayerSnake({
                 game: this.game,
@@ -195,10 +189,10 @@ export default class Game {
     }
 
     _onNewPlayer(data) {
-        console.log("new player", this.playerId ,data.playerId);
-        
+        console.log("new player", this.playerId, data.playerId);
+
         // Avoid possible duplicate players in room
-        var duplicate = this.game.snakes.find(function(player){
+        var duplicate = this.game.snakes.find(function (player) {
             return player.playerId === data.playerId
         });
 
@@ -207,7 +201,7 @@ export default class Game {
         if (duplicate) {
             // console.log('Duplicate player!')
             return
-        
+
         } else {
 
             new OtherPlayerSnake({
@@ -220,16 +214,17 @@ export default class Game {
                 roomId: data.roomId,
                 socket: this.socket
             });
+            console.log(this.game.snakes)
         }
     }
 
     shutdown() {
         // Cleanup logic here
-        this.socket.emit('delete player', { 
+        this.socket.emit('delete player', {
             playerId: this.playerId,
             roomId: this.roomId,
-         });
-        
+        });
+
         // Close the socket connection if necessary
         if (this.socket) {
             setTimeout(() => {
