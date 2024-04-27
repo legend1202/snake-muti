@@ -3,9 +3,9 @@ import Phaser from "phaser-ce"
 
 class OtherPlayerSnake extends Snake {
     constructor({ game, spriteKey, x, y, numSnakeSections, playerId, roomId, socket }) {
-        
+
         super({ game, spriteKey, x, y, numSnakeSections, playerId, roomId, socket });
-        
+
         this.game = game;
         this.snackaddCheck = this.snakeLength;
         // this.cursors = game.input.keyboard.createCursorKeys();
@@ -68,7 +68,7 @@ class OtherPlayerSnake extends Snake {
         } else {
             angle = -180 - angle;
         }
-        
+
         const dif = this.head.body.angle - angle;
         this.head.body.setZeroRotation();
         // if (this.cursors.left.isDown) {
@@ -93,15 +93,15 @@ class OtherPlayerSnake extends Snake {
         // var point = this.headPath.pop();
         // console.log("=============", point);
         // point.setTo(this.head.body.x, this.head.body.y);
-        
-        this.headPath.unshift({x:this.x, y:this.y});
+
+        this.headPath.unshift({ x: this.x, y: this.y });
 
         //place each section of the snake on the path of the snake head,
         //a certain distance from the section before it
         var index = 0;
         var lastIndex = null;
 
-        for (var i = 0 ; i < this.snakeLength ; i++) {
+        for (var i = 0; i < this.snakeLength; i++) {
 
             this.sections[i].body.x = this.headPath[index].x;
             this.sections[i].body.y = this.headPath[index].y;
@@ -154,10 +154,10 @@ class OtherPlayerSnake extends Snake {
         this.shadow.update();
     }
 
-    setMybody(data){
+    setMybody(data) {
         this.x = data.headX;
         this.y = data.headY;
-        this.mousePosX= data.mousePosX;
+        this.mousePosX = data.mousePosX;
         this.mousePosY = data.mousePosY;
         this.speed = data.speed;
         this.headPath = data.headPath;
