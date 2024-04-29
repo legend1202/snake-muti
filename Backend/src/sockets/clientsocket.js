@@ -1,10 +1,8 @@
 
-var events = require('events');
 var db = require('../db');
 var tournament = require('../models/tournament');
 var TournamentCtrl = require('../controllers/tournamentController');
 var database = null;
-
 
 exports.initdatabase = function () {
     db.connect(function (err) {
@@ -34,13 +32,23 @@ exports.initsocket = async function (socket, io) {
     });
 
     socket.on('move player', (res) => {
-        console.log("move player");
-        TournamentCtrl.movePlayer(socket, res);
+        if (!!!res.playerId) {
+            
+        }else{
+            TournamentCtrl.movePlayer(socket, res);
+        }
     });
 
     socket.on('rotate player', (res) => {
-        // console.log("rotate player");
         TournamentCtrl.rotatePlayer(socket, res);
+    });
+
+    socket.on('destroy food', (res) => {
+        TournamentCtrl.deleteFood(res);
+    });
+
+    socket.on('generate food', (res) => {
+        TournamentCtrl.generateFood(res);
     });
 
     socket.on('errorMessage', (res) => {
@@ -48,7 +56,7 @@ exports.initsocket = async function (socket, io) {
     });
 
     // Handle player disconnect
-    socket.on('disconnect', async function () {
-        console.log('One of users is disconnected');
+    socket.on('disconnect', async function (res) {
+        console.log('One of users is disconnected', res);
     });
 }

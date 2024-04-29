@@ -1,11 +1,12 @@
 /* ************************************************
 ** GAME PLAYER CLASS
 ************************************************ */
-exports.Player = function (startX, startY, startSections, id, roomId) {
-    var x = startX
-    var y = startY
-    var numSnakeSections = startSections
-    var id;
+exports.Player = function (headX, headY, playerId, roomId) {
+
+  var x = headX
+    var y = headY
+    // var numSnakeSections = startSections
+    var id = playerId;
     var roomId;
   
     // Getters and setters
@@ -53,4 +54,4 @@ exports.Player = function (startX, startY, startSections, id, roomId) {
       grow: grow,
 
     }
-  }
+}

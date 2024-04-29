@@ -54,21 +54,17 @@ class PlayerSnake extends Snake {
 
         const headX = this.head.body.x;
         const headY = this.head.body.y;
-        // console.log("Player-id", this.playerId);
-        // console.log("Head-position", headX, headY);
 
         this.rotatePlayer(headX, headY);
         this.socket.emit('rotate player', { 
-            x: headX, 
-            y: headY, 
+            headX: headX, 
+            headY: headY, 
             roomId:this.roomId, 
             playerId: this.playerId,
             snakeLength: this.snakeLength,
-            speed: this.speed,
-            isLightingUp: this.shadow.isLightingUp,
             mousePosX: this.game.input.activePointer.worldX,
             mousePosY: this.game.input.activePointer.worldY,
-            headPath: this.headPath,
+            headPath: this.headPath
         })
         this.movePlayer();
 
@@ -168,6 +164,21 @@ class PlayerSnake extends Snake {
         this.eyes.update();
         this.shadow.update();
     }
+    destroy() {
+
+        this.socket.emit('delete player', { 
+            playerId: this.playerId,
+            roomId: this.roomId,
+         });
+        
+        // Close the socket connection if necessary
+        if (this.socket) {
+            setTimeout(() => {
+                this.socket.disconnect();
+            }, 10);
+        }
+    }
+
 }
 
 export default PlayerSnake;

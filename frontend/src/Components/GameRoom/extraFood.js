@@ -1,5 +1,5 @@
-export default class Food {
-    constructor(game, x, y, index=null, socket, roomId, tint = 0xff0000) {
+export default class ExtraFood {
+    constructor(game, x, y, tint = 0xff0000) {
         this.game = game;
         this.debug = false;
         this.sprite = this.game.add.sprite(x, y, 'food');
@@ -11,11 +11,6 @@ export default class Food {
         this.sprite.food = this;
         this.head = null;
         this.constraint = null;
-        this.id = index;
-        this.socket = socket;
-        this.roomId = roomId;
-        this.socket.on('delete food', this.deleteFood.bind(this));
-
     }
 
     onBeginContact(phaserBody, p2Body) {
@@ -32,14 +27,9 @@ export default class Food {
     update() {
         if (this.head && Math.round(this.head.body.x) === Math.round(this.sprite.body.x) &&
             Math.round(this.head.body.y) === Math.round(this.sprite.body.y)) {
-            this.socket.emit('destroy food',{foodId: this.id, roomId: this.roomId});
+            console.log(this.id);
+            
             this.head.snake.incrementSize();
-            this.destroy();
-        }
-    }
-
-    deleteFood(data){
-        if (this.id == data.foodId) {
             this.destroy();
         }
     }

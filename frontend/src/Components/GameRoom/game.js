@@ -1,7 +1,7 @@
 import Phaser from "phaser-ce"
 import Util from "./util"
 import PlayerSnake from './playerSnake'
-import OtherPlayerSnake from "./otherplayerSnake"
+import OtherPlayerSnake from "./otherPlayerSnake"
 import Food from "./food"
 
 import Circle from "../../Assets/circle.png"
@@ -38,7 +38,8 @@ export default class Game {
 
     create() {
 
-        this.socket = io('http://localhost:8000');
+        // this.socket = io('http://localhost:8000');
+        this.socket = io('http://189.1.172.139');
         var width = this.game.width;
         var height = this.game.height;
         this.game.world.setBounds(-width, -height, width * 2, height * 2);
@@ -51,7 +52,7 @@ export default class Game {
 
 
         // Create New Player Object
-        var snake = new PlayerSnake({
+        const snake = new PlayerSnake({
             game: this.game,
             spriteKey: 'circle',
             x: 0,
@@ -67,17 +68,10 @@ export default class Game {
 
         // Initialize snake groups and collision
         for (var i = 0; i < this.game.snakes.length; i++) {
-            var snake = this.game.snakes[i];
-            // console.log(snake);
-            snake.head.body.setCollisionGroup(this.snakeHeadCollisionGroup);
-            snake.head.body.collides([this.foodCollisionGroup]);
-            snake.addDestroyedCallback(this.snakeDestroyed, this);
-        }
-
-           // Add food randomly
-        for (var i = 0; i < 100; i++) {
-            // console.log("Generate Food Group, X, Y:", Util.randomInt(-width, width), Util.randomInt(-height, height));
-            this.initFood(Util.randomInt(-width, width), Util.randomInt(-height, height));
+            const childSnake = this.game.snakes[i];
+            childSnake.head.body.setCollisionGroup(this.snakeHeadCollisionGroup);
+            childSnake.head.body.collides([this.foodCollisionGroup]);
+            childSnake.addDestroyedCallback(this.snakeDestroyed, this);
         }
 
         // Socket connection successful
@@ -86,19 +80,21 @@ export default class Game {
         // New player message received
         this.socket.on('food group', this._onFoodGroup.bind(this))
 
-        this.socket.on('rotate player', this._onRotatePlayer.bind(this))
-
         // Socket disconnection
         this.socket.on('disconnect', this._onSocketDisconnect.bind(this))
 
         // New player message received
         this.socket.on('player joined', this._onNewPlayer.bind(this))
 
+        //food init at the first
+        this.socket.on('init food', this.loadFood.bind(this));
+
         this.socket.on('new player', this.handleNewPlayer.bind(this));
 
     }
 
     update() {
+
         // Update game components
         for (var i = this.game.snakes.length - 1; i >= 0; i--) {
             this.game.snakes[i].update();
@@ -110,8 +106,8 @@ export default class Game {
         }
     }
 
-    initFood(x, y, tint) {
-        var f = new Food(this.game, x, y, tint);
+    initFood(x, y,index, tint) {
+        var f = new Food(this.game, x, y, index, this.socket, this.roomId, tint);
         f.sprite.body.setCollisionGroup(this.foodCollisionGroup);
         this.foodGroup.add(f.sprite);
         f.sprite.body.collides([this.snakeHeadCollisionGroup]);
@@ -119,97 +115,49 @@ export default class Game {
     }
 
     snakeDestroyed(snake) {
-        // console.log("Snake Destroyed", snake)
         for (var i = 0; i < snake.headPath.length; i += Math.round(snake.headPath.length / snake.snakeLength) * 2) {
             this.initFood(
                 snake.headPath[i].x + Util.randomInt(-10, 10),
                 snake.headPath[i].y + Util.randomInt(-10, 10)
             );
         }
+        this._onSocketDisconnect.bind(this);
     }
 
     _onSocketConnected() {
-
         // Send local player data to the game server
-        // console.log('_onSocketConnected Connected to socket server')
-
         this.socket.emit('new player', { 
-            spriteKey: 'circle',
-            x: this.newSnake.head.x,
-            y: this.newSnake.head.y,
-            numSnakeSections: this.newSnake.sections.length,
-            playerId: this.newSnake.playerId,
-            roomId: this.newSnake.roomId,
+            headX: 0,
+            headY: 0,
+            numSnakeSections: 30,
+            playerId: this.playerId,
+            roomId: this.roomId,
          });
     }
 
     //Player start rotating with the data from server
     _onRotatePlayer(res) {
-        // console.log("Player started moving:", res);
         
-        // var currentPlayer = this.game.snakes.find(function(player){
-        //     return player.playerId === res.playerId && res.roomId == player.roomId
-        // });
-
-        // if(!currentPlayer){
-        //     console.log("Player Not Found !!!")
-        //     return;
-        // }
-        
-        // this.game.snakes.forEach((element, i) => {
-        //     if(element.snake){
-        //         element.snake[i].rotatePlayer( res.headX, res.headY );
-        //     }
-        // });
+        this.game.snakes.forEach((element, i) => {
+            if(element.snake){
+                element.snake[i].rotatePlayer( res.headX, res.headY );
+            }
+        });
     }
 
     _onFoodGroup(foodGroup) {
-        // Add food randomly
-        // for (var i = 0; i < 100; i++) {
-        //     console.log("Generate Food Group, X, Y:", Util.randomInt(-width, width), Util.randomInt(-height, height));
-        //     this.initFood(Util.randomInt(-width, width), Util.randomInt(-height, height));
-        // }
-    }
-
-    _onSocketDisconnect(data) {
-        console.log("Someone left room!", data);
         
     }
 
-    handleNewPlayer(data){
-        if (data.playerId != this.playerId) {
-            console.log("exits players", this.playerId ,data.playerId);
-
-            new OtherPlayerSnake({
-                game: this.game,
-                spriteKey: 'circle',
-                x: data.x,
-                y: data.y,
-                numSnakeSections: 30,
-                playerId: data.playerId,
-                roomId: data.roomId,
-                socket: this.socket
-            });
-
-        }
+    _onSocketDisconnect() {
+        this.socket.emit('delete player', {playerId:this.playerId, roomId: this.roomId});
+        window.location.href = "http://test.snamba.com/";
+        // window.location.href = "http://localhost:3000";
+        
     }
 
     _onNewPlayer(data) {
-        console.log("new player", this.playerId ,data.playerId);
-        
-        // Avoid possible duplicate players in room
-        var duplicate = this.game.snakes.find(function(player){
-            return player.playerId === data.playerId
-        });
-
-        // console.log("Duplicated Player:", duplicate);
-
-        if (duplicate) {
-            // console.log('Duplicate player!')
-            return
-        
-        } else {
-
+        if (data.playerId != this.playerId) {
             new OtherPlayerSnake({
                 game: this.game,
                 spriteKey: 'circle',
@@ -218,9 +166,38 @@ export default class Game {
                 numSnakeSections: 30,
                 playerId: data.playerId,
                 roomId: data.roomId,
-                socket: this.socket
+                socket: this.socket,
+                foodGroup: this.foodGroup, 
+                snakeHeadCollisionGroup: this.snakeHeadCollisionGroup, 
+                foodCollisionGroup: this.foodCollisionGroup 
             });
         }
+    }
+
+    handleNewPlayer(data){
+        if (data.playerId != this.playerId) {
+            new OtherPlayerSnake({
+                game: this.game,
+                spriteKey: 'circle',
+                x: data.headX,
+                y: data.headY,
+                numSnakeSections: 30,
+                playerId: data.playerId,
+                roomId: data.roomId,
+                socket: this.socket,
+                foodGroup: this.foodGroup, 
+                snakeHeadCollisionGroup: this.snakeHeadCollisionGroup, 
+                foodCollisionGroup: this.foodCollisionGroup
+            });
+        }
+    }
+
+    loadFood(data) {
+        const width = this.game.width;
+        const height = this.game.height;
+        data.foods?.forEach(element => {
+            this.initFood(Util.calFoodPosition(element.x, width), Util.calFoodPosition(element.y, height), element.index);
+        });
     }
 
     shutdown() {
@@ -245,4 +222,5 @@ export default class Game {
         // Clear any remaining timers or callbacks
         this.game.time.events.removeAll();
     }
+
 }

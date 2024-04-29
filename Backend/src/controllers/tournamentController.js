@@ -1,9 +1,7 @@
 const TournamentML = require("../models/tournament");
 const PlayerCtrl = require('../controllers/playerController');
-const FoodCtrl = require('../controllers/foodController');
-const config = require("../config/config")
 
-let rooms = [];
+const rooms = [];
 var io = null;
 
 exports.getTournaments = function () {
@@ -21,80 +19,65 @@ exports.setSocket = function (socketIO) {
 exports.joinRoom = function (socket, playerData) {
         
     const newPlayer = new PlayerCtrl.Player(
-        playerData.x,
-        playerData.y,
-        playerData.numSnakeSections,
+        playerData.headX,
+        playerData.headY,
         playerData.playerId,
         playerData.roomId
     );
     
-    // console.log("New player Joined:", newPlayer);
-    
     const room = rooms[playerData.roomId];
  
-    // console.log("player joined",rooms[playerData.roomId] )
     if (room) {
 
-        if (!room.players) {
-            room.players = []; 
+        if (!!!room.players) {
+            room.players = [];
+            rooms[playerData.roomId].foods = new Array(100).fill().map((_, index) => {
+                return {
+                    x: Math.random(),
+                    y: Math.random(),
+                    index: index
+                }
+            });
         }
         
         // add new player to room
-        socket.join(playerData.roomId);
-
+        
         //check if player is exist in the room
         const isExistPlayer = rooms[playerData.roomId].players.find((player) => {
-            return player.id == newPlayer.id
+            return player.id == playerData.playerId
         });
-
+        
         if(!isExistPlayer){
+            socket.join(playerData.roomId);
             // add new player to private room
-            for (let index = 0; index < rooms[playerData.roomId].players.length; index++) {
-    
-                const player = rooms[playerData.roomId].players[index];
-                console.log("exit player", {
-                    playerId: player.id,
-                    roomId: player.roomId,
-                    spriteKey: "circle",
-                    x: player.getX(),
-                    y: player.getY(),
-                })
-    
-                // Send existing players to the new player
-                if (playerData.playerId !== player.id) {
-                    socket.emit('new player', {
-                        playerId: player.id,
-                        roomId: player.roomId,
-                        spriteKey: "circle",
-                        x: player.getX(),
-                        y: player.getY(),
-                    }); 
-                }
-                
-            }
-            rooms[playerData.roomId].players.push(newPlayer);
             // Broadcast new player to connected socket clients
-            console.log("new player", {
-                x: playerData.x,
-                y: playerData.y,
-                numSnakeSections: playerData.numSnakeSections,
-                playerId: playerData.playerId,
-                roomId: playerData.roomId
-            })
             io.to(playerData.roomId).emit('player joined', {
-                x: playerData.x,
-                y: playerData.y,
-                numSnakeSections: playerData.numSnakeSections,
+                headX: playerData.headX,
+                headY: playerData.headY,
                 playerId: playerData.playerId,
                 roomId: playerData.roomId
             });
+
+            rooms[playerData.roomId].players.push(newPlayer);
+
+            for (let index = 0; index < rooms[playerData.roomId].players.length; index++) {
+    
+                const player = rooms[playerData.roomId].players[index];
+                if ((player.id != playerData.playerId) && (player.id != undefined)) {
+                    
+                    socket.emit('new player', {
+                        playerId: player.id,
+                        roomId: player.roomId,
+                        headX: player.getX(),
+                        headY: player.getY(),
+                    }); 
+                }
+            }
         }
 
-
-
-
-        // send created FoodGroup X, Y
-        // this.emit('food group', foodGroup)
+        socket.emit('init food', {
+            foods: room.foods,
+        }); 
 
     } else {
         socket.emit('errorMessage', 'Room not found');
@@ -106,21 +89,45 @@ exports.movePlayer = (socket, res) =>{
 }
 
 exports.deletePlayer = (playerData) =>{
-    rooms[playerData.roomId].players = rooms[playerData.roomId].players.filter(player => player.id !== playerData.playerId);
+    rooms[playerData.roomId].players = rooms[playerData.roomId].players.filter(player => player.id != playerData.playerId);
+    io.to(playerData.roomId).emit("delete player", {
+        playerId: playerData.playerId,
+        roomId: playerData.roomId
+    });
+}
+exports.deleteFood = (data) =>{
+    rooms[data.roomId].foods = rooms[data.roomId].foods.filter(food => food.index != data.foodId);
+    io.to(data.roomId).emit("delete food", {
+        foodId: data.foodId,
+    });
+}
+
+exports.generateFood = (data) =>{
+    // console.log("generate food", data);
 }
 
 exports.rotatePlayer = function(socket, res) {
-    // console.log("hahahaha");
-    io.to(res.roomId).emit("otherplayer", {
+    
+    const currentPlayer = rooms[res.roomId].players.find((player) => {
+        return player.id == res.playerId
+    });
+    // console.log(currentPlayer);
+    if(!!!currentPlayer){
+    }else{
+        // Update player position
+        currentPlayer.setX(res.headX);
+        currentPlayer.setY(res.headY);
+
+    }
+
+    io.to(res.roomId).emit("rotate player", {
         snakeLength: res.snakeLength,
-        speed: res.speed,
-        isLightingUp: res.isLightingUp,
         mousePosX: res.mousePosX,
         mousePosY: res.mousePosY,
         playerId: res.playerId,
         roomId: res.roomId,
-        headX: res.x,
-        headY: res.y,
+        headX: res.headX,
+        headY: res.headY,
         headPath: res.headPath
     });
 }

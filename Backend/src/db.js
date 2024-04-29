@@ -1,7 +1,6 @@
 var MongoClient = require('mongodb').MongoClient;
 // var URL = 'mongodb+srv://nightpoker:gGRTkjrP534RhoRr@cluster0.igc5p.mongodb.net/MJDatabase';
 var URL = 'mongodb://127.0.0.1:27017/SnambDB';
-// var URL = 'mongodb+srv://sorokinart777:4gav2kztPQwHW52I@cluster0.or5cjjd.mongodb.net/?retryWrites=true&w=majority';
 var state = {
     db: null,
 };

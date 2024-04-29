@@ -128,18 +128,6 @@ export default class Snake {
     }
 
     destroy() {
-
-        this.socket.emit('delete player', { 
-            playerId: this.playerId,
-            roomId: this.roomId,
-         });
-        
-        // Close the socket connection if necessary
-        if (this.socket) {
-            setTimeout(() => {
-                this.socket.disconnect();
-            }, 10);
-        }
         
         this.game.snakes.splice(this.game.snakes.indexOf(this), 1);
         this.game.physics.p2.removeConstraint(this.edgeLock);
